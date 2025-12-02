@@ -28,6 +28,7 @@ type Server interface {
 
 // server implements the API server
 type server struct {
+	port               int
 	storage            storage.HistoricStorage
 	baselineManager    analysis.BaselineManager
 	trendAnalyzer      analysis.TrendAnalyzer
@@ -47,6 +48,7 @@ func NewServer(
 	trendAnalyzer analysis.TrendAnalyzer,
 	regressionDetector analysis.RegressionDetector,
 	db *sql.DB,
+	port int,
 	log logrus.FieldLogger,
 ) Server {
 	return &server{
@@ -55,6 +57,7 @@ func NewServer(
 		trendAnalyzer:      trendAnalyzer,
 		regressionDetector: regressionDetector,
 		db:                 db,
+		port:               port,
 		log:                log.WithField("component", "api-server"),
 		upgrader: websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool {
@@ -75,7 +78,7 @@ func (s *server) Start(ctx context.Context) error {
 
 	// Create HTTP server
 	s.httpServer = &http.Server{
-		Addr:         ":8081",
+		Addr:         fmt.Sprintf(":%d", s.port),
 		Handler:      router,
 		ReadTimeout:  30 * time.Second,
 		WriteTimeout: 30 * time.Second,
@@ -173,8 +176,9 @@ func (s *server) setupRoutes() *mux.Router {
 	api.HandleFunc("/health", s.handleHealth).Methods("GET", "OPTIONS")
 
 	// Grafana SimpleJSON Datasource API routes
-	grafana := router.PathPrefix("/grafana").Subrouter()
-	grafana.Use(s.enableCORS)
+	// Mount under /api/grafana to match datasource configuration
+	grafana := api.PathPrefix("/grafana").Subrouter()
+	// CORS is already applied globally to the root router
 
 	// SimpleJSON datasource endpoints
 	grafana.HandleFunc("/", s.handleGrafanaRoot).Methods("GET", "POST", "OPTIONS")
@@ -1052,20 +1056,13 @@ func (s *server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 
 // handleWebSocketHub manages WebSocket message broadcasting
 func (s *server) handleWebSocketHub() {
-	for {
-		select {
-		case message, ok := <-s.wsBroadcast:
-			if !ok {
-				return
-			}
-
-			// Broadcast to all connected clients
-			for client := range s.wsClients {
-				err := client.WriteMessage(websocket.TextMessage, message)
-				if err != nil {
-					client.Close()
-					delete(s.wsClients, client)
-				}
+	for message := range s.wsBroadcast {
+		// Broadcast to all connected clients
+		for client := range s.wsClients {
+			err := client.WriteMessage(websocket.TextMessage, message)
+			if err != nil {
+				client.Close()
+				delete(s.wsClients, client)
 			}
 		}
 	}
@@ -1240,8 +1237,127 @@ func (s *server) handleGrafanaQuery(w http.ResponseWriter, r *http.Request) {
 
 // handleGrafanaAnnotations handles annotation requests from Grafana
 func (s *server) handleGrafanaAnnotations(w http.ResponseWriter, r *http.Request) {
-	// Return empty annotations for now
-	s.writeJSONResponse(w, http.StatusOK, []interface{}{})
+	ctx := r.Context()
+
+	var req GrafanaAnnotationRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		s.log.WithError(err).Error("Failed to decode annotation request")
+		s.writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("Invalid request body: %v", err))
+		return
+	}
+
+	// Parse time range
+	fromTime, err := time.Parse(time.RFC3339, req.Range.From)
+	if err != nil {
+		s.writeErrorResponse(w, http.StatusBadRequest, "Invalid from time")
+		return
+	}
+
+	toTime, err := time.Parse(time.RFC3339, req.Range.To)
+	if err != nil {
+		s.writeErrorResponse(w, http.StatusBadRequest, "Invalid to time")
+		return
+	}
+
+	// Handle different annotation types
+	var annotations []GrafanaAnnotation
+
+	switch req.Annotation.Query {
+	case "regressions":
+		// Query regressions
+		query := `
+			SELECT r.detected_at, r.severity, r.deviation, r.metric, hr.test_name, hr.client
+			FROM regressions r
+			JOIN historic_runs hr ON r.run_id = hr.id
+			WHERE r.detected_at >= $1 AND r.detected_at <= $2
+			ORDER BY r.detected_at DESC`
+
+		rows, err := s.db.QueryContext(ctx, query, fromTime, toTime)
+		if err != nil {
+			s.log.WithError(err).Error("Failed to query regressions for annotations")
+			break
+		}
+		defer rows.Close()
+
+		for rows.Next() {
+			var detectedAt time.Time
+			var severity, metric, testName, client string
+			var deviation float64
+
+			if err := rows.Scan(&detectedAt, &severity, &deviation, &metric, &testName, &client); err != nil {
+				continue
+			}
+
+			title := fmt.Sprintf("Regression: %s", metric)
+			text := fmt.Sprintf("%s regression detected for %s (%s)\nSeverity: %s\nDeviation: %.2f%%",
+				metric, client, testName, severity, deviation)
+
+			tags := []string{"regression", severity, testName, client}
+
+			annotations = append(annotations, GrafanaAnnotation{
+				Annotation: map[string]interface{}{
+					"name":       "regressions",
+					"enabled":    true,
+					"datasource": "jsonrpc-bench",
+					"iconColor":  "red",
+					"query":      req.Annotation.Query,
+				},
+				Time:  detectedAt.UnixNano() / 1000000, // ms
+				Title: title,
+				Text:  text,
+				Tags:  tags,
+			})
+		}
+
+	case "baselines":
+		// Query baselines
+		query := `
+			SELECT b.created_at, b.name, b.description, hr.test_name
+			FROM baselines b
+			JOIN historic_runs hr ON b.run_id = hr.id
+			WHERE b.created_at >= $1 AND b.created_at <= $2
+			ORDER BY b.created_at DESC`
+
+		rows, err := s.db.QueryContext(ctx, query, fromTime, toTime)
+		if err != nil {
+			s.log.WithError(err).Error("Failed to query baselines for annotations")
+			break
+		}
+		defer rows.Close()
+
+		for rows.Next() {
+			var createdAt time.Time
+			var name, description, testName string
+
+			if err := rows.Scan(&createdAt, &name, &description, &testName); err != nil {
+				continue
+			}
+
+			title := fmt.Sprintf("Baseline: %s", name)
+			text := fmt.Sprintf("Baseline set for %s\n%s", testName, description)
+			tags := []string{"baseline", testName}
+
+			annotations = append(annotations, GrafanaAnnotation{
+				Annotation: map[string]interface{}{
+					"name":       "baselines",
+					"enabled":    true,
+					"datasource": "jsonrpc-bench",
+					"iconColor":  "green",
+					"query":      req.Annotation.Query,
+				},
+				Time:  createdAt.UnixNano() / 1000000, // ms
+				Title: title,
+				Text:  text,
+				Tags:  tags,
+			})
+		}
+	}
+
+	if annotations == nil {
+		annotations = []GrafanaAnnotation{}
+	}
+
+	s.writeJSONResponse(w, http.StatusOK, annotations)
 }
 
 // handleGrafanaTagKeys handles tag key requests from Grafana

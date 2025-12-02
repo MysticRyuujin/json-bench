@@ -103,11 +103,11 @@ type GrafanaSearchRequest struct {
 type GrafanaAnnotationRequest struct {
 	Range      GrafanaTimeRange `json:"range"`
 	Annotation struct {
-		Name       string `json:"name"`
-		Datasource string `json:"datasource"`
-		Enable     bool   `json:"enable"`
-		IconColor  string `json:"iconColor"`
-		Query      string `json:"query"`
+		Name       string      `json:"name"`
+		Datasource interface{} `json:"datasource"`
+		Enable     bool        `json:"enable"`
+		IconColor  string      `json:"iconColor"`
+		Query      string      `json:"query"`
 	} `json:"annotation"`
 }
 

@@ -43,6 +43,7 @@ func main() {
 
 	// API server flags
 	apiMode := flag.Bool("api", false, "Run in API server mode (HTTP server + WebSocket)")
+	apiPort := flag.Int("api-port", 8082, "Port to run the API server on")
 
 	flag.Parse()
 
@@ -64,7 +65,7 @@ func main() {
 
 	// API server mode
 	if *apiMode {
-		if err := runAPIServer(*storageConfig, logger); err != nil {
+		if err := runAPIServer(*storageConfig, *apiPort, logger); err != nil {
 			log.Fatalf("API server failed: %v", err)
 		}
 		return
@@ -483,7 +484,7 @@ func generateHistoricAnalysisReport(summary *types.HistoricSummary, trends []*ty
 }
 
 // runAPIServer runs the HTTP API server for serving historic data
-func runAPIServer(storageConfigPath string, logger *logrus.Logger) error {
+func runAPIServer(storageConfigPath string, port int, logger *logrus.Logger) error {
 	if storageConfigPath == "" {
 		return fmt.Errorf("storage configuration path is required for API server mode")
 	}
@@ -531,6 +532,7 @@ func runAPIServer(storageConfigPath string, logger *logrus.Logger) error {
 		trendAnalyzer,
 		regressionDetector,
 		db,
+		port,
 		logger,
 	)
 
@@ -543,7 +545,7 @@ func runAPIServer(storageConfigPath string, logger *logrus.Logger) error {
 		return fmt.Errorf("failed to start API server: %w", err)
 	}
 
-	logger.Info("API server started successfully on port 8081")
+	logger.Info("API server started successfully on port 8082")
 	logger.Info("Press Ctrl+C to stop the server")
 
 	// Setup signal handling for graceful shutdown

@@ -11,7 +11,7 @@
         "type": "dashboard"
       },
       {
-        "datasource": "JSON-RPC Bench API",
+        "datasource": { "type": "grafana-simple-json-datasource", "uid": "json-rpc-bench-api" },
         "enable": true,
         "hide": false,
         "iconColor": "green",
@@ -28,7 +28,7 @@
   "links": [],
   "panels": [
     {
-      "datasource": "PostgreSQL",
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
       "description": "Comparison of current performance against established baselines",
       "fieldConfig": {
         "defaults": {
@@ -120,12 +120,12 @@
       },
       "targets": [
         {
-          "datasource": "PostgreSQL",
+          "datasource": { "type": "postgres", "uid": "PostgreSQL" },
           "format": "time_series",
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "-- Current performance\nSELECT\n  $__timeGroupAlias(timestamp,$__interval),\n  avg(avg_latency_ms) as \"Current Avg Latency\"\nFROM historic_runs\nWHERE\n  $__timeFilter(timestamp)\n  AND test_name = '$test_name'\nGROUP BY 1\nORDER BY 1\n\nUNION ALL\n\n-- Baseline performance\nSELECT\n  $__timeGroupAlias(hr.timestamp,$__interval),\n  avg(hr.avg_latency_ms) as \"Baseline Avg Latency\"\nFROM historic_runs hr\nJOIN baselines b ON hr.id = b.run_id\nWHERE\n  $__timeFilter(hr.timestamp)\n  AND hr.test_name = '$test_name'\n  AND b.name = '$baseline_name'\nGROUP BY 1\nORDER BY 1",
+          "rawSql": "WITH current_perf AS (\n  SELECT\n    $__timeGroupAlias(timestamp,$__interval),\n    avg(avg_latency_ms) as value,\n    'Current Avg Latency' as metric\n  FROM historic_runs\n  WHERE\n    $__timeFilter(timestamp)\n    AND test_name = '$test_name'\n  GROUP BY 1\n),\nbaseline_perf AS (\n  SELECT\n    $__timeGroupAlias(hr.timestamp,$__interval),\n    avg(hr.avg_latency_ms) as value,\n    'Baseline Avg Latency' as metric\n  FROM historic_runs hr\n  JOIN baselines b ON hr.id = b.run_id\n  WHERE\n    $__timeFilter(hr.timestamp)\n    AND hr.test_name = '$test_name'\n    AND b.name = '$baseline_name'\n  GROUP BY 1\n)\nSELECT time, value as \"Current Avg Latency\" FROM current_perf\nUNION ALL\nSELECT time, value as \"Baseline Avg Latency\" FROM baseline_perf\nORDER BY time",
           "refId": "A",
           "select": [
             [
@@ -151,7 +151,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": "PostgreSQL",
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
       "description": "Performance deviation from baseline as percentage",
       "fieldConfig": {
         "defaults": {
@@ -227,7 +227,7 @@
       },
       "targets": [
         {
-          "datasource": "PostgreSQL",
+          "datasource": { "type": "postgres", "uid": "PostgreSQL" },
           "format": "time_series",
           "group": [],
           "metricColumn": "none",
@@ -258,7 +258,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": "PostgreSQL",
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
       "description": "Error rate comparison against baseline",
       "fieldConfig": {
         "defaults": {
@@ -334,12 +334,12 @@
       },
       "targets": [
         {
-          "datasource": "PostgreSQL",
+          "datasource": { "type": "postgres", "uid": "PostgreSQL" },
           "format": "time_series",
           "group": [],
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "-- Current error rate\nSELECT\n  $__timeGroupAlias(timestamp,$__interval),\n  avg(overall_error_rate) as \"Current Error Rate\"\nFROM historic_runs\nWHERE\n  $__timeFilter(timestamp)\n  AND test_name = '$test_name'\nGROUP BY 1\nORDER BY 1\n\nUNION ALL\n\n-- Baseline error rate\nSELECT\n  $__timeGroupAlias(hr.timestamp,$__interval),\n  avg(hr.overall_error_rate) as \"Baseline Error Rate\"\nFROM historic_runs hr\nJOIN baselines b ON hr.id = b.run_id\nWHERE\n  $__timeFilter(hr.timestamp)\n  AND hr.test_name = '$test_name'\n  AND b.name = '$baseline_name'\nGROUP BY 1\nORDER BY 1",
+          "rawSql": "WITH current_err AS (\n  SELECT\n    $__timeGroupAlias(timestamp,$__interval),\n    avg(overall_error_rate) as value\n  FROM historic_runs\n  WHERE\n    $__timeFilter(timestamp)\n    AND test_name = '$test_name'\n  GROUP BY 1\n),\nbaseline_err AS (\n  SELECT\n    $__timeGroupAlias(hr.timestamp,$__interval),\n    avg(hr.overall_error_rate) as value\n  FROM historic_runs hr\n  JOIN baselines b ON hr.id = b.run_id\n  WHERE\n    $__timeFilter(hr.timestamp)\n    AND hr.test_name = '$test_name'\n    AND b.name = '$baseline_name'\n  GROUP BY 1\n)\nSELECT time, value as \"Current Error Rate\" FROM current_err\nUNION ALL\nSELECT time, value as \"Baseline Error Rate\" FROM baseline_err\nORDER BY time",
           "refId": "A",
           "select": [
             [
@@ -365,7 +365,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": "PostgreSQL",
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
       "description": "Detailed comparison table of key metrics",
       "fieldConfig": {
         "defaults": {
@@ -473,7 +473,7 @@
       "pluginVersion": "8.0.0",
       "targets": [
         {
-          "datasource": "PostgreSQL",
+          "datasource": { "type": "postgres", "uid": "PostgreSQL" },
           "format": "table",
           "group": [],
           "metricColumn": "none",
@@ -521,15 +521,15 @@
           "text": "mixed",
           "value": "mixed"
         },
-        "datasource": "PostgreSQL",
-        "definition": "SELECT DISTINCT test_name FROM historic_runs ORDER BY test_name",
+        "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+        "definition": "SELECT DISTINCT test_name FROM benchmark_runs ORDER BY test_name",
         "hide": 0,
         "includeAll": false,
         "label": "Test Name",
         "multi": false,
         "name": "test_name",
         "options": [],
-        "query": "SELECT DISTINCT test_name FROM historic_runs ORDER BY test_name",
+        "query": "SELECT DISTINCT test_name FROM benchmark_runs ORDER BY test_name",
         "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
@@ -543,7 +543,7 @@
           "text": "stable",
           "value": "stable"
         },
-        "datasource": "PostgreSQL",
+        "datasource": { "type": "postgres", "uid": "PostgreSQL" },
         "definition": "SELECT DISTINCT name FROM baselines ORDER BY name",
         "hide": 0,
         "includeAll": false,

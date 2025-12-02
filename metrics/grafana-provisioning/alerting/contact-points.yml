@@ -70,8 +70,7 @@ contactPoints:
       - uid: email-receiver
         type: email
         settings:
-          addresses:
-            - "${ALERT_EMAIL_ADDRESSES}"
+          addresses: "${ALERT_EMAIL_ADDRESSES}"
           subject: "JSON-RPC Benchmark Alert - {{ .Status }}"
           message: |
             {{ range .Alerts }}

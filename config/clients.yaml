@@ -5,7 +5,7 @@
 clients:
   # Geth (Go-Ethereum)
   - name: "geth"
-    url: "http://localhost:8545"
+    url: "http://192.168.15.31:8545"
     timeout: "30s"
     max_retries: 3
     headers:
@@ -13,7 +13,7 @@ clients:
   
   # Nethermind
   - name: "nethermind"
-    url: "http://localhost:8546"
+    url: "http://192.168.15.32:8545"
     timeout: "30s"
     max_retries: 3
     headers:

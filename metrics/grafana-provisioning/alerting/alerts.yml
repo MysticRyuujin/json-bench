@@ -19,8 +19,8 @@ groups:
               target: "avg_latency"
               refId: A
               datasource:
-                type: simplejson
-                uid: JSON-RPC Bench API
+                type: grafana-simple-json-datasource
+                uid: json-rpc-bench-api
           - refId: B
             queryType: ""
             relativeTimeRange:
@@ -30,12 +30,12 @@ groups:
               target: "avg_latency"
               refId: B
               datasource:
-                type: simplejson
-                uid: JSON-RPC Bench API
+                type: grafana-simple-json-datasource
+                uid: json-rpc-bench-api
           - refId: C
             queryType: ""
             relativeTimeRange:
-              from: 0
+              from: 600
               to: 0
             model:
               conditions:
@@ -82,12 +82,12 @@ groups:
               target: "error_rate"
               refId: A
               datasource:
-                type: simplejson
-                uid: JSON-RPC Bench API
+                type: grafana-simple-json-datasource
+                uid: json-rpc-bench-api
           - refId: C
             queryType: ""
             relativeTimeRange:
-              from: 0
+              from: 300
               to: 0
             model:
               conditions:
@@ -134,8 +134,8 @@ groups:
               target: "throughput"
               refId: A
               datasource:
-                type: simplejson
-                uid: JSON-RPC Bench API
+                type: grafana-simple-json-datasource
+                uid: json-rpc-bench-api
           - refId: B
             queryType: ""
             relativeTimeRange:
@@ -145,12 +145,12 @@ groups:
               target: "throughput"
               refId: B
               datasource:
-                type: simplejson
-                uid: JSON-RPC Bench API
+                type: grafana-simple-json-datasource
+                uid: json-rpc-bench-api
           - refId: C
             queryType: ""
             relativeTimeRange:
-              from: 0
+              from: 300
               to: 0
             model:
               conditions:
@@ -197,12 +197,12 @@ groups:
               target: "avg_latency"
               refId: A
               datasource:
-                type: simplejson
-                uid: JSON-RPC Bench API
+                type: grafana-simple-json-datasource
+                uid: json-rpc-bench-api
           - refId: C
             queryType: ""
             relativeTimeRange:
-              from: 0
+              from: 900
               to: 0
             model:
               conditions:

@@ -11,7 +11,7 @@
         "type": "dashboard"
       },
       {
-        "datasource": "JSON-RPC Bench API",
+        "datasource": { "type": "grafana-simple-json-datasource", "uid": "json-rpc-bench-api" },
         "enable": true,
         "hide": false,
         "iconColor": "red",
@@ -20,7 +20,7 @@
         "type": "tags"
       },
       {
-        "datasource": "JSON-RPC Bench API",
+        "datasource": { "type": "grafana-simple-json-datasource", "uid": "json-rpc-bench-api" },
         "enable": true,
         "hide": false,
         "iconColor": "green",
@@ -29,7 +29,7 @@
         "type": "tags"
       },
       {
-        "datasource": "JSON-RPC Bench API",
+        "datasource": { "type": "grafana-simple-json-datasource", "uid": "json-rpc-bench-api" },
         "enable": true,
         "hide": false,
         "iconColor": "blue",
@@ -46,7 +46,7 @@
   "links": [],
   "panels": [
     {
-      "datasource": "JSON-RPC Bench API",
+      "datasource": { "type": "grafana-simple-json-datasource", "uid": "json-rpc-bench-api" },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -117,17 +117,17 @@
       },
       "targets": [
         {
-          "datasource": "JSON-RPC Bench API",
+          "datasource": { "type": "grafana-simple-json-datasource", "uid": "json-rpc-bench-api" },
           "target": "mixed.overall.avg_latency",
           "refId": "A"
         },
         {
-          "datasource": "JSON-RPC Bench API",
+          "datasource": { "type": "grafana-simple-json-datasource", "uid": "json-rpc-bench-api" },
           "target": "mixed.overall.p95_latency",
           "refId": "B"
         },
         {
-          "datasource": "JSON-RPC Bench API",
+          "datasource": { "type": "grafana-simple-json-datasource", "uid": "json-rpc-bench-api" },
           "target": "mixed.overall.p99_latency",
           "refId": "C"
         }
@@ -136,7 +136,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": "JSON-RPC Bench API",
+      "datasource": { "type": "grafana-simple-json-datasource", "uid": "json-rpc-bench-api" },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -207,22 +207,22 @@
       },
       "targets": [
         {
-          "datasource": "JSON-RPC Bench API",
+          "datasource": { "type": "grafana-simple-json-datasource", "uid": "json-rpc-bench-api" },
           "target": "mixed.geth.p95_latency",
           "refId": "A"
         },
         {
-          "datasource": "JSON-RPC Bench API",
+          "datasource": { "type": "grafana-simple-json-datasource", "uid": "json-rpc-bench-api" },
           "target": "mixed.nethermind.p95_latency",
           "refId": "B"
         },
         {
-          "datasource": "JSON-RPC Bench API",
+          "datasource": { "type": "grafana-simple-json-datasource", "uid": "json-rpc-bench-api" },
           "target": "mixed.besu.p95_latency",
           "refId": "C"
         },
         {
-          "datasource": "JSON-RPC Bench API",
+          "datasource": { "type": "grafana-simple-json-datasource", "uid": "json-rpc-bench-api" },
           "target": "mixed.erigon.p95_latency",
           "refId": "D"
         }
@@ -231,7 +231,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": "JSON-RPC Bench API",
+      "datasource": { "type": "grafana-simple-json-datasource", "uid": "json-rpc-bench-api" },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -306,22 +306,22 @@
       },
       "targets": [
         {
-          "datasource": "JSON-RPC Bench API",
+          "datasource": { "type": "grafana-simple-json-datasource", "uid": "json-rpc-bench-api" },
           "target": "mixed.geth.error_rate",
           "refId": "A"
         },
         {
-          "datasource": "JSON-RPC Bench API",
+          "datasource": { "type": "grafana-simple-json-datasource", "uid": "json-rpc-bench-api" },
           "target": "mixed.nethermind.error_rate",
           "refId": "B"
         },
         {
-          "datasource": "JSON-RPC Bench API",
+          "datasource": { "type": "grafana-simple-json-datasource", "uid": "json-rpc-bench-api" },
           "target": "mixed.besu.error_rate",
           "refId": "C"
         },
         {
-          "datasource": "JSON-RPC Bench API",
+          "datasource": { "type": "grafana-simple-json-datasource", "uid": "json-rpc-bench-api" },
           "target": "mixed.erigon.error_rate",
           "refId": "D"
         }
@@ -330,7 +330,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": "JSON-RPC Bench API",
+      "datasource": { "type": "grafana-simple-json-datasource", "uid": "json-rpc-bench-api" },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -401,22 +401,22 @@
       },
       "targets": [
         {
-          "datasource": "JSON-RPC Bench API",
+          "datasource": { "type": "grafana-simple-json-datasource", "uid": "json-rpc-bench-api" },
           "target": "mixed.geth.throughput",
           "refId": "A"
         },
         {
-          "datasource": "JSON-RPC Bench API",
+          "datasource": { "type": "grafana-simple-json-datasource", "uid": "json-rpc-bench-api" },
           "target": "mixed.nethermind.throughput",
           "refId": "B"
         },
         {
-          "datasource": "JSON-RPC Bench API",
+          "datasource": { "type": "grafana-simple-json-datasource", "uid": "json-rpc-bench-api" },
           "target": "mixed.besu.throughput",
           "refId": "C"
         },
         {
-          "datasource": "JSON-RPC Bench API",
+          "datasource": { "type": "grafana-simple-json-datasource", "uid": "json-rpc-bench-api" },
           "target": "mixed.erigon.throughput",
           "refId": "D"
         }
@@ -425,7 +425,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": "JSON-RPC Bench API",
+      "datasource": { "type": "grafana-simple-json-datasource", "uid": "json-rpc-bench-api" },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -556,7 +556,7 @@
       "pluginVersion": "8.0.0",
       "targets": [
         {
-          "datasource": "JSON-RPC Bench API",
+          "datasource": { "type": "grafana-simple-json-datasource", "uid": "json-rpc-bench-api" },
           "target": "mixed.overall.avg_latency",
           "refId": "A",
           "type": "table"
@@ -566,7 +566,7 @@
       "type": "table"
     },
     {
-      "datasource": "JSON-RPC Bench API",
+      "datasource": { "type": "grafana-simple-json-datasource", "uid": "json-rpc-bench-api" },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -641,12 +641,12 @@
       },
       "targets": [
         {
-          "datasource": "JSON-RPC Bench API",
+          "datasource": { "type": "grafana-simple-json-datasource", "uid": "json-rpc-bench-api" },
           "target": "rate(mixed.overall.avg_latency)",
           "refId": "A"
         },
         {
-          "datasource": "JSON-RPC Bench API",
+          "datasource": { "type": "grafana-simple-json-datasource", "uid": "json-rpc-bench-api" },
           "target": "rate(mixed.overall.p95_latency)",
           "refId": "B"
         }
@@ -655,7 +655,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": "PostgreSQL",
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -726,7 +726,7 @@
       },
       "targets": [
         {
-          "datasource": "PostgreSQL",
+          "datasource": { "type": "postgres", "uid": "PostgreSQL" },
           "format": "time_series",
           "group": [],
           "metricColumn": "none",
@@ -757,7 +757,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": "PostgreSQL",
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -850,7 +850,7 @@
       "pluginVersion": "8.0.0",
       "targets": [
         {
-          "datasource": "PostgreSQL",
+          "datasource": { "type": "postgres", "uid": "PostgreSQL" },
           "format": "table",
           "group": [],
           "metricColumn": "none",
@@ -898,15 +898,15 @@
           "text": "mixed",
           "value": "mixed"
         },
-        "datasource": "JSON-RPC Bench API",
-        "definition": "",
+        "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+        "definition": "SELECT DISTINCT test_name FROM benchmark_runs ORDER BY test_name",
         "hide": 0,
         "includeAll": false,
         "label": "Test Name",
         "multi": false,
         "name": "test_name",
         "options": [],
-        "query": "test_name",
+        "query": "SELECT DISTINCT test_name FROM benchmark_runs ORDER BY test_name",
         "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
@@ -920,15 +920,15 @@
           "text": "All",
           "value": "$__all"
         },
-        "datasource": "JSON-RPC Bench API",
-        "definition": "",
+        "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+        "definition": "SELECT DISTINCT client FROM benchmark_metrics ORDER BY 1",
         "hide": 0,
         "includeAll": true,
         "label": "Client",
         "multi": true,
         "name": "client",
         "options": [],
-        "query": "client",
+        "query": "SELECT DISTINCT client FROM benchmark_metrics ORDER BY 1",
         "refresh": 1,
         "regex": "",
         "skipUrlSync": false,

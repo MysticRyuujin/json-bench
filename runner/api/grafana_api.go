@@ -1120,14 +1120,14 @@ type GrafanaAnnotationRequest struct {
 
 // GrafanaAnnotationQuery represents an annotation query
 type GrafanaAnnotationQuery struct {
-	Name       string `json:"name"`
-	Datasource string `json:"datasource"`
-	Enable     bool   `json:"enable"`
-	IconColor  string `json:"iconColor"`
-	Query      string `json:"query,omitempty"`
-	TagKeys    string `json:"tagKeys,omitempty"`
-	TextField  string `json:"textField,omitempty"`
-	TitleField string `json:"titleField,omitempty"`
+	Name       string      `json:"name"`
+	Datasource interface{} `json:"datasource"`
+	Enable     bool        `json:"enable"`
+	IconColor  string      `json:"iconColor"`
+	Query      string      `json:"query,omitempty"`
+	TagKeys    string      `json:"tagKeys,omitempty"`
+	TextField  string      `json:"textField,omitempty"`
+	TitleField string      `json:"titleField,omitempty"`
 }
 
 // GrafanaAnnotation represents an annotation response

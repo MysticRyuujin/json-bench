@@ -14,6 +14,7 @@ datasources:
     
   - name: PostgreSQL
     type: postgres
+    uid: PostgreSQL
     access: proxy
     url: postgres:5432
     database: jsonrpc_bench
@@ -32,9 +33,10 @@ datasources:
       password: "postgres"
       
   - name: JSON-RPC Bench API
-    type: simplejson
+    type: grafana-simple-json-datasource
+    uid: json-rpc-bench-api
     access: proxy
-    url: http://runner:8080/api/grafana
+    url: http://runner:8082/api/grafana
     isDefault: true
     editable: true
     jsonData:

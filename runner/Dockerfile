@@ -42,7 +42,7 @@ USER appuser
 
 # Health check with longer start period and more frequent checks
 HEALTHCHECK --interval=15s --timeout=5s --start-period=60s --retries=5 \
-    CMD curl -f http://localhost:8081/api/health || exit 1
+    CMD curl -f http://localhost:8082/api/health || exit 1
 
 # Default entrypoint
 ENTRYPOINT ["/app/jsonrpc-bench-runner"]
