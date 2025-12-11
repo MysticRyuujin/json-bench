@@ -462,12 +462,19 @@ export default function Dashboard() {
             <div className="card-content">
               {latencyTrend?.trendPoints && latencyTrend.trendPoints.length > 0 ? (
                 <ThroughputChart
-                  data={latencyTrend.trendPoints.map(point => ({
-                    timestamp: point.timestamp,
-                    throughput: point.value > 0 ? 1000 / point.value : 0, // Convert latency to rough throughput
-                    totalRequests: 10000,
-                    duration: 5 * 60, // 5 minutes in seconds
-                  }))}
+                  data={latencyTrend.trendPoints.map(point => {
+                    // Convert latency (ms) to approximate throughput (req/s)
+                    // This is a rough approximation: throughput ≈ 1000/latency
+                    // Validate latency is in a reasonable range (1-10000ms) to avoid misleading values
+                    const latency = point.value
+                    const throughput = (latency > 0 && latency < 10000) ? 1000 / latency : 0
+                    return {
+                      timestamp: point.timestamp,
+                      throughput: throughput,
+                      totalRequests: 10000,
+                      duration: 5 * 60, // 5 minutes in seconds
+                    }
+                  })}
                   height={300}
                 />
               ) : (

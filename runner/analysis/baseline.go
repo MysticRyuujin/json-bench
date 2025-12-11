@@ -585,33 +585,9 @@ func (bm *baselineManager) createBaselinesTable(ctx context.Context) error {
 		}
 	}
 
-	// Add git_branch column if it doesn't exist (migration for existing databases)
-	var gitBranchExists bool
-	err := bm.db.QueryRowContext(ctx,
-		`SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='baselines' AND column_name='git_branch')`).Scan(&gitBranchExists)
-	if err != nil {
-		bm.log.WithError(err).Warn("Failed to check if git_branch column exists")
-	} else if !gitBranchExists {
-		if _, err := bm.db.ExecContext(ctx, `ALTER TABLE baselines ADD COLUMN git_branch VARCHAR(255)`); err != nil {
-			bm.log.WithError(err).Warn("Failed to add git_branch column")
-		} else {
-			bm.log.Info("Added git_branch column to baselines table")
-		}
-	}
-
-	// Add git_commit column if it doesn't exist (migration for existing databases)
-	var gitCommitExists bool
-	err = bm.db.QueryRowContext(ctx,
-		`SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='baselines' AND column_name='git_commit')`).Scan(&gitCommitExists)
-	if err != nil {
-		bm.log.WithError(err).Warn("Failed to check if git_commit column exists")
-	} else if !gitCommitExists {
-		if _, err := bm.db.ExecContext(ctx, `ALTER TABLE baselines ADD COLUMN git_commit VARCHAR(255)`); err != nil {
-			bm.log.WithError(err).Warn("Failed to add git_commit column")
-		} else {
-			bm.log.Info("Added git_commit column to baselines table")
-		}
-	}
+	// NOTE: Schema migrations (such as adding columns) should be handled externally 
+	// using a migration tool or versioned SQL scripts. The baselines table creation 
+	// includes git_branch and git_commit columns for new databases.
 
 	return nil
 }
@@ -642,6 +618,15 @@ func (bm *baselineManager) extractBaselineMetrics(ctx context.Context, run *type
 	// If no client metrics from full_results, create basic entries from run.Clients
 	if len(clientMetrics) == 0 && len(run.Clients) > 0 {
 		bm.log.Info("Using basic client metrics from run data")
+		var totalRequests int64
+		var totalErrors int64
+		if len(run.Clients) > 0 {
+			totalRequests = run.TotalRequests / int64(len(run.Clients))
+			totalErrors = run.TotalErrors / int64(len(run.Clients))
+		} else {
+			totalRequests = 0
+			totalErrors = 0
+		}
 		for _, clientName := range run.Clients {
 			clientMetrics[clientName] = ClientBaseline{
 				ErrorRate:     run.OverallErrorRate,
@@ -649,8 +634,8 @@ func (bm *baselineManager) extractBaselineMetrics(ctx context.Context, run *type
 				P95Latency:    run.P95LatencyMs,
 				P99Latency:    run.P99LatencyMs,
 				Throughput:    0, // Not available without full results
-				TotalRequests: run.TotalRequests / int64(len(run.Clients)),
-				TotalErrors:   run.TotalErrors / int64(len(run.Clients)),
+				TotalRequests: totalRequests,
+				TotalErrors:   totalErrors,
 			}
 		}
 	}

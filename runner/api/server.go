@@ -1032,21 +1032,20 @@ func (s *server) handleGetGlobalTrends(w http.ResponseWriter, r *http.Request) {
 	// Query trend data from benchmark_runs
 	since := time.Now().AddDate(0, 0, -days)
 
-	// Map metric name to database column
-	metricColumn := "avg_latency"
-	switch metric {
-	case "avg_latency":
+	// Map metric name to database column using a whitelist to prevent SQL injection
+	validMetricColumns := map[string]string{
+		"avg_latency":  "avg_latency",
+		"p95_latency":  "p95_latency",
+		"p99_latency":  "p99_latency",
+		"error_rate":   "(100.0 - success_rate)",
+		"throughput":   "throughput",
+		"success_rate": "success_rate",
+	}
+
+	metricColumn, valid := validMetricColumns[metric]
+	if !valid {
+		// Default to avg_latency if metric not recognized
 		metricColumn = "avg_latency"
-	case "p95_latency":
-		metricColumn = "p95_latency"
-	case "p99_latency":
-		metricColumn = "p95_latency" // fallback if p99 not available
-	case "error_rate":
-		metricColumn = "(100.0 - success_rate)"
-	case "throughput":
-		metricColumn = "throughput"
-	case "success_rate":
-		metricColumn = "success_rate"
 	}
 
 	query := fmt.Sprintf(`

@@ -69,11 +69,23 @@ func (d *Database) InsertRun(run *types.HistoricRun) error {
 			p95_latency = EXCLUDED.p95_latency,
 			full_results = EXCLUDED.full_results`
 
-	clientsJSON, _ := json.Marshal(run.Clients)
-	methodsJSON, _ := json.Marshal(run.Methods)
-	tagsJSON, _ := json.Marshal(run.Tags)
+	clientsJSON, err := json.Marshal(run.Clients)
+	if err != nil {
+		d.log.WithError(err).Error("Failed to marshal clients JSON")
+		return err
+	}
+	methodsJSON, err := json.Marshal(run.Methods)
+	if err != nil {
+		d.log.WithError(err).Error("Failed to marshal methods JSON")
+		return err
+	}
+	tagsJSON, err := json.Marshal(run.Tags)
+	if err != nil {
+		d.log.WithError(err).Error("Failed to marshal tags JSON")
+		return err
+	}
 
-	_, err := d.db.Exec(query,
+	_, err = d.db.Exec(query,
 		run.ID, run.Timestamp, run.GitCommit, run.GitBranch, run.TestName,
 		run.Description, run.ConfigHash, run.ResultPath, run.Duration,
 		run.TotalRequests, run.SuccessRate, run.AvgLatency, run.P95Latency,

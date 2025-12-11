@@ -20,7 +20,7 @@ import { ExpandableSection } from '../components/ui/ExpandableSection'
 import { PerClientMetricsTable } from '../components/metrics'
 import { ExportButton } from '../components/ui'
 import type { HistoricRun, BenchmarkResult } from '../types/api'
-import { useRun, useAPI, useSetBaseline, useRemoveBaseline, useBaselines, useRuns } from '../api/hooks'
+import { useRun, useSetBaseline, useRemoveBaseline, useBaselines, useRuns } from '../api/hooks'
 import { formatPercentage, formatLatency } from '../utils/metric-formatters'
 
 export default function RunDetails() {

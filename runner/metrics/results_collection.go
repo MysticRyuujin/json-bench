@@ -210,6 +210,10 @@ func collectPrometheusClientsMetrics(cfg *config.Config, timestamp time.Time, su
 						method.ErrorCount += failedCount
 						method.SuccessCount -= failedCount
 						if method.SuccessCount < 0 {
+							// Log warning about negative success count
+							// This indicates initial SuccessCount may not have accounted for JSON-RPC errors
+							fmt.Printf("Warning: Success count became negative for method %s (was %d, failed_count %d)\n",
+								methodName, method.SuccessCount+failedCount, failedCount)
 							method.SuccessCount = 0
 						}
 						// Recalculate rates
