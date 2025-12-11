@@ -44,6 +44,9 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- Create historic_runs table if it doesn't exist
+-- Note: id is VARCHAR instead of UUID because run IDs are generated as
+-- timestamp-based strings (format: YYYYMMDD-HHMMSS-gitsha) for better readability
+-- and chronological ordering. See runner/storage/historic.go:generateRunID()
 CREATE TABLE IF NOT EXISTS historic_runs (
     id VARCHAR(255) PRIMARY KEY,
     test_name VARCHAR(255) NOT NULL,
@@ -92,6 +95,9 @@ CREATE TABLE IF NOT EXISTS baselines (
 );
 
 -- Create regressions table if it doesn't exist
+-- Note: Foreign key constraints on run_id and baseline_id are intentionally omitted
+-- to allow flexibility in data retention policies (e.g., keeping regressions after
+-- runs are cleaned up) and to avoid cascading delete issues.
 CREATE TABLE IF NOT EXISTS regressions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     run_id VARCHAR(255) NOT NULL,

@@ -42,6 +42,9 @@ interface EditBaselineForm {
 }
 
 // Helper to safely get fields from baselines that might be HistoricRun or Baseline objects
+// NOTE: These helpers handle both camelCase and snake_case field names due to API response
+// inconsistencies. Ideally, the backend API should use a consistent naming convention,
+// but this defensive approach ensures compatibility with various response formats.
 function getBaselineField(baseline: any, camelCase: string, snakeCase: string, defaultValue = ''): any {
   return baseline[camelCase] ?? baseline[snakeCase] ?? defaultValue
 }
@@ -623,7 +626,14 @@ export default function BaselineManager({
                       <div className="space-y-1 text-xs">
                         <div className="flex justify-between">
                           <span className="text-gray-500">Success:</span>
-                          <span className="font-mono">{formatPercentage(100 - getBaselineMetric(baseline, 'errorRate', 0))}</span>
+                          <span className="font-mono">
+                            {(() => {
+                              const errorRate = getBaselineMetric(baseline, 'errorRate')
+                              return typeof errorRate === 'number' && !isNaN(errorRate)
+                                ? formatPercentage(100 - errorRate)
+                                : 'N/A'
+                            })()}
+                          </span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-500">Latency:</span>

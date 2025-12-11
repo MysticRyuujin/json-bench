@@ -34,7 +34,9 @@ export function useDetailedMetrics(runId: string, enabled: boolean = true) {
             clientMethodMetrics = methodData.methods_by_client
             
             // Also create aggregate method metrics for backward compatibility
-            // Use plain object instead of Map to avoid iterator issues
+            // Use plain object instead of Map to avoid iterator issues with certain
+            // build configurations or browser environments where Map.forEach may not
+            // work as expected with React state updates
             const aggregateMethodMetrics: Record<string, any> = {}
             
             try {

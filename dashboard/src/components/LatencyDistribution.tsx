@@ -82,9 +82,11 @@ const calculateStatistics = (buckets: LatencyBucket[]): HistogramStats => {
 
   // Calculate values for each bucket
   buckets.forEach(bucket => {
-    // Handle Infinity in max by using min * 2 as a reasonable upper bound
-    const effectiveMax = isFinite(bucket.max) ? bucket.max : bucket.min * 2
-    const midpoint = (bucket.min + effectiveMax) / 2
+    // For buckets with max = Infinity, use min as the representative value
+    // since it's the lower bound and we don't have actual data about the upper range
+    const midpoint = isFinite(bucket.max)
+      ? (bucket.min + bucket.max) / 2
+      : bucket.min
     totalCount += bucket.count
     sum += midpoint * bucket.count
     
