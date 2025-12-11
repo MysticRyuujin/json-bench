@@ -333,6 +333,9 @@ class BenchmarkAPI {
    * @param runId - The run ID to set as baseline
    * @param name - The baseline name
    * @returns Promise that resolves when baseline is set
+   * @note Uses snake_case (run_id) as required by backend API.
+   *       TODO: Backend should be standardized to accept camelCase for consistency
+   *       with JavaScript/TypeScript conventions.
    */
   async setBaseline(runId: string, name: string): Promise<void> {
     await this.makeRequest({

@@ -461,22 +461,34 @@ export default function Dashboard() {
             </div>
             <div className="card-content">
               {latencyTrend?.trendPoints && latencyTrend.trendPoints.length > 0 ? (
-                <ThroughputChart
-                  data={latencyTrend.trendPoints.map(point => {
-                    // Convert latency (ms) to approximate throughput (req/s)
-                    // This is a rough approximation: throughput ≈ 1000/latency
-                    // Validate latency is in a reasonable range (1-10000ms) to avoid misleading values
-                    const latency = point.value
-                    const throughput = (latency > 0 && latency < 10000) ? 1000 / latency : 0
-                    return {
-                      timestamp: point.timestamp,
-                      throughput: throughput,
-                      totalRequests: 10000,
-                      duration: 5 * 60, // 5 minutes in seconds
-                    }
-                  })}
-                  height={300}
-                />
+                <>
+                  <div className="text-xs text-gray-500 italic mb-2">
+                    Note: Throughput shown is a rough approximation derived from latency (1000/latency).
+                    This does not account for concurrency, batching, or actual request patterns.
+                    For accurate throughput metrics, please refer to the actual benchmark results.
+                  </div>
+                  <ThroughputChart
+                    data={latencyTrend.trendPoints.map(point => {
+                      // Convert latency (ms) to approximate throughput (req/s)
+                      // WARNING: This is an overly simplistic approximation that assumes
+                      // a direct inverse relationship without accounting for:
+                      // - Concurrency levels
+                      // - Request batching
+                      // - Network overhead
+                      // - Client-side processing time
+                      // Range check (1-10000ms) filters out extreme outliers
+                      const latency = point.value
+                      const throughput = (latency > 0 && latency < 10000) ? 1000 / latency : 0
+                      return {
+                        timestamp: point.timestamp,
+                        throughput: throughput,
+                        totalRequests: 10000,
+                        duration: 5 * 60, // 5 minutes in seconds
+                      }
+                    })}
+                    height={300}
+                  />
+                </>
               ) : (
                 <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
                   <div className="text-center">

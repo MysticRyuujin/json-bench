@@ -405,6 +405,8 @@ func extractTestName(cfg *config.Config) string {
 	return "default_test"
 }
 
+// extractDescription returns the description from the config.
+// Empty descriptions are acceptable and will result in an empty string.
 func extractDescription(cfg *config.Config) string {
 	return cfg.Description
 }
