@@ -202,18 +202,20 @@ func collectPrometheusClientsMetrics(cfg *config.Config, timestamp time.Time, su
 				if checkName == "has_result" && passRate < 1.0 {
 					// passRate is 0-1, so failure rate is (1 - passRate)
 					// Calculate the number of failed checks based on request count
+					// NOTE: method.Count should represent total requests including all error types.
+					// If SuccessCount was already excluding some errors, this may double-count.
 					failureRate := 1.0 - passRate
 					failedCount := int64(float64(method.Count) * failureRate)
 					if failedCount > 0 {
 						// These are requests that got HTTP 200 but returned a JSON-RPC error
-						// Add to error count and adjust success count
+						// Recalculate SuccessCount from total to avoid double-counting
+						// SuccessCount should be: total requests - all errors
 						method.ErrorCount += failedCount
-						method.SuccessCount -= failedCount
+						method.SuccessCount = method.Count - method.ErrorCount
 						if method.SuccessCount < 0 {
-							// Log warning about negative success count
-							// This indicates initial SuccessCount may not have accounted for JSON-RPC errors
-							fmt.Printf("Warning: Success count became negative for method %s (was %d, failed_count %d)\n",
-								methodName, method.SuccessCount+failedCount, failedCount)
+							// This should not happen if method.Count is truly the total
+							fmt.Printf("Warning: Success count became negative for method %s (total: %d, errors: %d)\n",
+								methodName, method.Count, method.ErrorCount)
 							method.SuccessCount = 0
 						}
 						// Recalculate rates

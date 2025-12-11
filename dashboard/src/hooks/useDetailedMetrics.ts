@@ -107,7 +107,12 @@ export function useDetailedMetrics(runId: string, enabled: boolean = true) {
               
               (run as any).method_metrics = methodArray
             } catch (aggError) {
-              console.warn('Failed to aggregate method metrics:', aggError)
+              // Log the error for debugging but also propagate it so the user knows aggregation failed
+              console.error('Failed to aggregate method metrics:', aggError)
+              // Set an empty array so the UI can handle the missing data gracefully
+              (run as any).method_metrics = []
+              // Re-throw to ensure the error is not silently ignored
+              throw new Error(`Method metrics aggregation failed: ${aggError instanceof Error ? aggError.message : String(aggError)}`)
             }
           } else if (methodData && methodData.methods) {
             // Old response format - single client or aggregate

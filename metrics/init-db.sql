@@ -78,6 +78,11 @@ CREATE TABLE IF NOT EXISTS historic_runs (
 );
 
 -- Create baselines table if it doesn't exist
+-- NOTE: run_id does not have a foreign key constraint to historic_runs(id)
+-- for flexibility in data retention policies. This creates a data integrity risk
+-- where baselines can reference non-existent runs. The application should validate
+-- that run_id exists when creating baselines, and cleanup processes should handle
+-- orphaned baselines appropriately.
 CREATE TABLE IF NOT EXISTS baselines (
     id VARCHAR(255) PRIMARY KEY,
     name VARCHAR(255) NOT NULL UNIQUE,

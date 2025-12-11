@@ -119,9 +119,11 @@ const calculateStatistics = (buckets: LatencyBucket[]): HistogramStats => {
   // Find mode (bucket with highest count)
   const maxBucket = buckets.reduce((max, bucket) => 
     bucket.count > max.count ? bucket : max, buckets[0])
-  // Handle Infinity in mode bucket as well
-  const effectiveModeMax = isFinite(maxBucket.max) ? maxBucket.max : maxBucket.min * 2
-  const mode = (maxBucket.min + effectiveModeMax) / 2
+  // For unbounded buckets (max is Infinity), use min as the mode (best known lower bound)
+  // Using min avoids arbitrary multiplication that has no basis in actual data
+  const mode = isFinite(maxBucket.max)
+    ? (maxBucket.min + maxBucket.max) / 2
+    : maxBucket.min
 
   // Estimate median
   let cumulativeCount = 0
@@ -131,9 +133,11 @@ const calculateStatistics = (buckets: LatencyBucket[]): HistogramStats => {
   for (const bucket of buckets) {
     cumulativeCount += bucket.count
     if (cumulativeCount >= medianPosition) {
-      // Handle Infinity in median bucket as well
-      const effectiveMedianMax = isFinite(bucket.max) ? bucket.max : bucket.min * 2
-      median = (bucket.min + effectiveMedianMax) / 2
+      // For unbounded buckets (max is Infinity), use min as the median (best known lower bound)
+      // Using min avoids arbitrary multiplication that has no basis in actual data
+      median = isFinite(bucket.max)
+        ? (bucket.min + bucket.max) / 2
+        : bucket.min
       break
     }
   }

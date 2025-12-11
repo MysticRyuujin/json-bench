@@ -43,8 +43,11 @@ interface EditBaselineForm {
 
 // Helper to safely get fields from baselines that might be HistoricRun or Baseline objects
 // NOTE: These helpers handle both camelCase and snake_case field names due to API response
-// inconsistencies. Ideally, the backend API should use a consistent naming convention,
-// but this defensive approach ensures compatibility with various response formats.
+// inconsistencies. This is a defensive workaround that masks an underlying API design issue.
+// TODO: The backend API should be standardized to use a consistent naming convention
+// (either always camelCase for JavaScript/TypeScript frontends or always snake_case throughout)
+// to eliminate this complexity and potential for bugs. Once standardized, these helper
+// functions can be removed and replaced with direct field access.
 function getBaselineField(baseline: any, camelCase: string, snakeCase: string, defaultValue = ''): any {
   return baseline[camelCase] ?? baseline[snakeCase] ?? defaultValue
 }

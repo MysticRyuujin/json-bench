@@ -269,9 +269,15 @@ func configureOutputs(cfg *config.Config, cmd *exec.Cmd) *exec.Cmd {
 	if cfg.Outputs.PrometheusRW != nil {
 		cmd.Args = append(cmd.Args, "--out", "experimental-prometheus-rw")
 		// k6 expects the full remote write URL with /api/v1/write path
-		rwURL := strings.TrimSuffix(cfg.Outputs.PrometheusRW.Endpoint, "/") + "/api/v1/write"
+		// Ensure the endpoint doesn't already contain the path to avoid duplication
+		endpoint := strings.TrimSuffix(cfg.Outputs.PrometheusRW.Endpoint, "/")
+		// Check if the path is already present to avoid malformed URLs like
+		// http://host:port/api/v1/write/api/v1/write
+		if !strings.HasSuffix(endpoint, "/api/v1/write") {
+			endpoint = endpoint + "/api/v1/write"
+		}
 		cmd.Env = append(cmd.Env,
-			fmt.Sprintf("K6_PROMETHEUS_RW_SERVER_URL=%s", rwURL),
+			fmt.Sprintf("K6_PROMETHEUS_RW_SERVER_URL=%s", endpoint),
 			"K6_PROMETHEUS_RW_TREND_STATS=min,max,avg,med,p(90),p(95),p(99)",
 		)
 		if cfg.Outputs.PrometheusRW.BasicAuth.Username != "" {

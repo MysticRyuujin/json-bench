@@ -618,15 +618,9 @@ func (bm *baselineManager) extractBaselineMetrics(ctx context.Context, run *type
 	// If no client metrics from full_results, create basic entries from run.Clients
 	if len(clientMetrics) == 0 && len(run.Clients) > 0 {
 		bm.log.Info("Using basic client metrics from run data")
-		var totalRequests int64
-		var totalErrors int64
-		if len(run.Clients) > 0 {
-			totalRequests = run.TotalRequests / int64(len(run.Clients))
-			totalErrors = run.TotalErrors / int64(len(run.Clients))
-		} else {
-			totalRequests = 0
-			totalErrors = 0
-		}
+		// Outer condition ensures len(run.Clients) > 0, so division is safe
+		totalRequests := run.TotalRequests / int64(len(run.Clients))
+		totalErrors := run.TotalErrors / int64(len(run.Clients))
 		for _, clientName := range run.Clients {
 			clientMetrics[clientName] = ClientBaseline{
 				ErrorRate:     run.OverallErrorRate,
