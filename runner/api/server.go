@@ -169,6 +169,9 @@ func (s *server) setupRoutes() *mux.Router {
 	api.HandleFunc("/tests/{testName}/clients/{client}/trends", s.handleGetClientTrends).Methods("GET", "OPTIONS")
 	api.HandleFunc("/tests/{testName}/methods/{method}/trends", s.handleGetMethodTrends).Methods("GET", "OPTIONS")
 
+	// Global trends endpoint (for dashboard)
+	api.HandleFunc("/trends", s.handleGetGlobalTrends).Methods("GET", "OPTIONS")
+
 	// WebSocket endpoint for real-time updates
 	api.HandleFunc("/ws", s.handleWebSocket)
 
@@ -994,6 +997,132 @@ func (s *server) handleGetMethodTrends(w http.ResponseWriter, r *http.Request) {
 	}
 
 	s.writeJSONResponse(w, http.StatusOK, trends)
+}
+
+// handleGetGlobalTrends provides global trend data for the dashboard
+func (s *server) handleGetGlobalTrends(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	// Parse query parameters
+	metric := r.URL.Query().Get("metric")
+	period := r.URL.Query().Get("period")
+	limitStr := r.URL.Query().Get("limit")
+
+	// Default values
+	if metric == "" {
+		metric = "avg_latency"
+	}
+
+	// Parse period (e.g., "7d", "30d")
+	days := 7
+	if period != "" {
+		period = strings.TrimSuffix(period, "d")
+		if parsed, err := strconv.Atoi(period); err == nil && parsed > 0 {
+			days = parsed
+		}
+	}
+
+	limit := 30
+	if limitStr != "" {
+		if parsed, err := strconv.Atoi(limitStr); err == nil && parsed > 0 {
+			limit = parsed
+		}
+	}
+
+	// Query trend data from benchmark_runs
+	since := time.Now().AddDate(0, 0, -days)
+
+	// Map metric name to database column
+	metricColumn := "avg_latency"
+	switch metric {
+	case "avg_latency":
+		metricColumn = "avg_latency"
+	case "p95_latency":
+		metricColumn = "p95_latency"
+	case "p99_latency":
+		metricColumn = "p95_latency" // fallback if p99 not available
+	case "error_rate":
+		metricColumn = "(100.0 - success_rate)"
+	case "throughput":
+		metricColumn = "throughput"
+	case "success_rate":
+		metricColumn = "success_rate"
+	}
+
+	query := fmt.Sprintf(`
+		SELECT 
+			timestamp,
+			test_name,
+			%s as value
+		FROM benchmark_runs
+		WHERE timestamp >= $1
+		ORDER BY timestamp DESC
+		LIMIT $2
+	`, metricColumn)
+
+	rows, err := s.db.QueryContext(ctx, query, since, limit)
+	if err != nil {
+		s.log.WithError(err).Error("Failed to query global trends")
+		s.writeErrorResponse(w, http.StatusInternalServerError, "Failed to retrieve trends")
+		return
+	}
+	defer rows.Close()
+
+	type TrendPoint struct {
+		Timestamp time.Time `json:"timestamp"`
+		Value     float64   `json:"value"`
+	}
+
+	var points []TrendPoint
+	for rows.Next() {
+		var timestamp time.Time
+		var testName string
+		var value float64
+		if err := rows.Scan(&timestamp, &testName, &value); err != nil {
+			s.log.WithError(err).Warn("Failed to scan trend point")
+			continue
+		}
+		points = append(points, TrendPoint{
+			Timestamp: timestamp,
+			Value:     value,
+		})
+	}
+
+	// Ensure points is never nil (empty slice instead)
+	if points == nil {
+		points = []TrendPoint{}
+	}
+
+	// Sort points by timestamp ascending for proper trend display
+	sort.Slice(points, func(i, j int) bool {
+		return points[i].Timestamp.Before(points[j].Timestamp)
+	})
+
+	// Calculate trend direction based on first and last values
+	direction := "stable"
+	percentChange := 0.0
+	if len(points) >= 2 {
+		first := points[0].Value
+		last := points[len(points)-1].Value
+		if first > 0 {
+			percentChange = ((last - first) / first) * 100
+			if percentChange < -5 {
+				direction = "improving" // Lower latency is better
+			} else if percentChange > 5 {
+				direction = "degrading" // Higher latency is worse
+			}
+		}
+	}
+
+	// Return format matching TrendData interface expected by frontend
+	response := map[string]interface{}{
+		"period":        fmt.Sprintf("%dd", days),
+		"trendPoints":   points,
+		"direction":     direction,
+		"percentChange": percentChange,
+	}
+
+	s.writeJSONResponse(w, http.StatusOK, response)
 }
 
 // WebSocket Handler

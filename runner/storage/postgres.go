@@ -60,12 +60,14 @@ func (d *Database) InsertRun(run *types.HistoricRun) error {
 		INSERT INTO benchmark_runs (
 			id, timestamp, git_commit, git_branch, test_name, description,
 			config_hash, result_path, duration, total_requests, success_rate,
-			avg_latency, p95_latency, clients, methods, tags, is_baseline, baseline_name
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
+			avg_latency, p95_latency, clients, methods, tags, is_baseline, baseline_name,
+			full_results
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
 		ON CONFLICT (id) DO UPDATE SET
 			success_rate = EXCLUDED.success_rate,
 			avg_latency = EXCLUDED.avg_latency,
-			p95_latency = EXCLUDED.p95_latency`
+			p95_latency = EXCLUDED.p95_latency,
+			full_results = EXCLUDED.full_results`
 
 	clientsJSON, _ := json.Marshal(run.Clients)
 	methodsJSON, _ := json.Marshal(run.Methods)
@@ -76,6 +78,7 @@ func (d *Database) InsertRun(run *types.HistoricRun) error {
 		run.Description, run.ConfigHash, run.ResultPath, run.Duration,
 		run.TotalRequests, run.SuccessRate, run.AvgLatency, run.P95Latency,
 		clientsJSON, methodsJSON, tagsJSON, run.IsBaseline, run.BaselineName,
+		run.FullResults,
 	)
 
 	if err != nil {
@@ -124,11 +127,13 @@ func (d *Database) GetRun(id string) (*types.HistoricRun, error) {
 	query := `
 		SELECT id, timestamp, git_commit, git_branch, test_name, description,
 			config_hash, result_path, duration, total_requests, success_rate,
-			avg_latency, p95_latency, clients, methods, tags, is_baseline, baseline_name
+			avg_latency, p95_latency, clients, methods, tags, is_baseline, baseline_name,
+			full_results
 		FROM benchmark_runs WHERE id = $1`
 
 	var run types.HistoricRun
 	var clientsJSON, methodsJSON, tagsJSON []byte
+	var fullResultsJSON []byte // Use []byte to handle NULL values
 
 	err := d.db.QueryRow(query, id).Scan(
 		&run.ID, &run.Timestamp, &run.GitCommit, &run.GitBranch,
@@ -136,6 +141,7 @@ func (d *Database) GetRun(id string) (*types.HistoricRun, error) {
 		&run.Duration, &run.TotalRequests, &run.SuccessRate,
 		&run.AvgLatency, &run.P95Latency, &clientsJSON, &methodsJSON,
 		&tagsJSON, &run.IsBaseline, &run.BaselineName,
+		&fullResultsJSON,
 	)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -147,6 +153,11 @@ func (d *Database) GetRun(id string) (*types.HistoricRun, error) {
 	json.Unmarshal(clientsJSON, &run.Clients)
 	json.Unmarshal(methodsJSON, &run.Methods)
 	json.Unmarshal(tagsJSON, &run.Tags)
+
+	// Copy full_results if present
+	if fullResultsJSON != nil {
+		run.FullResults = fullResultsJSON
+	}
 
 	// Populate the millisecond fields from the base fields
 	// since the database only stores avg_latency, not avg_latency_ms

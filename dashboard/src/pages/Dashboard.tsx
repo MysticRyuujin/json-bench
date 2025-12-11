@@ -435,7 +435,7 @@ export default function Dashboard() {
               <p className="text-sm text-gray-500">Average response time over {timeRange}</p>
             </div>
             <div className="card-content">
-              {latencyTrend ? (
+              {latencyTrend?.trendPoints && latencyTrend.trendPoints.length > 0 ? (
                 <TrendChart
                   data={latencyTrend.trendPoints}
                   title="Average Latency"
@@ -444,7 +444,11 @@ export default function Dashboard() {
                 />
               ) : (
                 <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
-                  <p className="text-gray-500">Loading trend data...</p>
+                  <div className="text-center">
+                    <ChartBarIcon className="h-12 w-12 text-gray-300 mx-auto mb-2" />
+                    <p className="text-gray-500">No trend data available yet</p>
+                    <p className="text-sm text-gray-400">Run some benchmarks to see trends</p>
+                  </div>
                 </div>
               )}
             </div>
@@ -456,11 +460,11 @@ export default function Dashboard() {
               <p className="text-sm text-gray-500">Requests per second over {timeRange}</p>
             </div>
             <div className="card-content">
-              {latencyTrend ? (
+              {latencyTrend?.trendPoints && latencyTrend.trendPoints.length > 0 ? (
                 <ThroughputChart
                   data={latencyTrend.trendPoints.map(point => ({
                     timestamp: point.timestamp,
-                    throughput: 1000 / point.value, // Convert latency to rough throughput
+                    throughput: point.value > 0 ? 1000 / point.value : 0, // Convert latency to rough throughput
                     totalRequests: 10000,
                     duration: 5 * 60, // 5 minutes in seconds
                   }))}
@@ -468,7 +472,11 @@ export default function Dashboard() {
                 />
               ) : (
                 <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
-                  <p className="text-gray-500">Loading throughput data...</p>
+                  <div className="text-center">
+                    <ChartBarIcon className="h-12 w-12 text-gray-300 mx-auto mb-2" />
+                    <p className="text-gray-500">No throughput data available yet</p>
+                    <p className="text-sm text-gray-400">Run some benchmarks to see trends</p>
+                  </div>
                 </div>
               )}
             </div>
